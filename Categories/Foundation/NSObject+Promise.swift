@@ -18,7 +18,7 @@ import PromiseKit
 */
 extension NSObject {
     public func observe<T>(keyPath: String) -> Promise<T> {
-        let (promise, fulfill, reject) = Promise<T>.defer()
+        let (promise, fulfill, reject) = Promise<T>.deferred()
         KVOProxy(observee: self, keyPath: keyPath) { obj in
             if let obj = obj as? T {
                 fulfill(obj)
@@ -42,10 +42,12 @@ private class KVOProxy: NSObject {
         observee.addObserver(self, forKeyPath: keyPath, options: NSKeyValueObservingOptions.New, context: pointer)
     }
 
-    override func observeValueForKeyPath(keyPath: String, ofObject object: AnyObject, change: [NSObject : AnyObject], context: UnsafeMutablePointer<Void>) {
-        if context == pointer {
+    override func observeValueForKeyPath(keyPath: String?, ofObject object: AnyObject?, change: [NSObject : AnyObject]?, context: UnsafeMutablePointer<Void>) {
+        if let change = change where context == pointer {
             fulfill(change[NSKeyValueChangeNewKey])
-            object.removeObserver(self, forKeyPath: keyPath)
+            if let object = object, keyPath = keyPath {
+                object.removeObserver(self, forKeyPath: keyPath)
+            }
             retainCycle = nil
         }
     }

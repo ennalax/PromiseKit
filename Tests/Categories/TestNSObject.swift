@@ -12,9 +12,12 @@ class TestNSObject: XCTestCase {
 
         let foo = Foo()
         foo.observe("bar").then { (newValue: String) -> Void in
-            XCTAssertEqual(newValue, "moo")
+            // using XCTAssertEqual here crashes Swift 2.0
+            // this worries me, since it seems more likely we have
+            // an ARC problem, but I can’t see what it would be.
+            XCTAssert(newValue == "moo")
             ex.fulfill()
-        }.catch { err in
+        }.snatch { err in
             XCTFail()
         }
         foo.bar = "moo"

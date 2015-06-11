@@ -20,7 +20,7 @@ class TestPromisableViewController: UIKitTestCase {
     func test1a() {
         let ex = expectationWithDescription("")
         let p: Promise<Int> = rootvc.promiseViewController(UIViewController(), animated: false)
-        p.catch { err in
+        p.snatch { err in
             XCTAssertEqual(err.domain, PMKErrorDomain)
             XCTAssertEqual(err.code, PMKInvalidUsageError)
             ex.fulfill()
@@ -32,7 +32,7 @@ class TestPromisableViewController: UIKitTestCase {
     func test1b() {
         let ex = expectationWithDescription("")
         let p: Promise<Int> = rootvc.promiseViewController(MyViewController(), animated: false)
-        p.catch { err in
+        p.snatch { err in
             XCTAssertEqual(err.domain, PMKErrorDomain)
             XCTAssertEqual(err.code, PMKInvalidUsageError)
             ex.fulfill()
@@ -46,7 +46,7 @@ class TestPromisableViewController: UIKitTestCase {
         let my = MyViewController()
         my.promise = Promise(true)
         let p: Promise<Int> = rootvc.promiseViewController(my, animated: false)
-        p.catch { err in
+        p.snatch { err in
             XCTAssertEqual(err.domain, PMKErrorDomain)
             XCTAssertEqual(err.code, PMKInvalidUsageError)
             ex.fulfill()
@@ -71,7 +71,7 @@ class TestPromisableViewController: UIKitTestCase {
     func test2b() {
         let ex = expectationWithDescription("")
         let my = MyViewController()
-        let (promise, resolve, _) = Promise<Int>.defer()
+        let (promise, resolve, _) = Promise<Int>.deferred()
         my.promise = promise
         rootvc.promiseViewController(my, animated: false).then { (x: Int) -> Void in
             XCTAssertTrue(my.appeared)
@@ -121,21 +121,17 @@ class UIKitTestCase: XCTestCase {
 }
 
 func subviewsOf(v: UIView) -> [UIView] {
-    var vv = v.subviews as! [UIView]
-    for v in v.subviews as! [UIView] {
-        vv += subviewsOf(v)
-    }
-    return vv
+    return v.subviews.flatMap(subviewsOf)
 }
 
-func find<T>(vc: UIViewController, type: AnyClass) -> T! {
-    return find(vc.view, type)
+func find<T>(vc: UIViewController, type: AnyClass) -> T? {
+    return find(vc.view, type: type)
 }
 
-func find<T>(view: UIView, type: AnyClass) -> T! {
+func find<T>(view: UIView, type: AnyClass) -> T? {
     for x in subviewsOf(view) {
         if x is T {
-            return x as! T
+            return x as? T
         }
     }
     return nil
@@ -143,11 +139,11 @@ func find<T>(view: UIView, type: AnyClass) -> T! {
 
 
 extension XCTestCase {
-    func tester(_ file : String = __FILE__, _ line : Int = __LINE__) -> KIFUITestActor {
+    func tester(file : String = __FILE__, _ line : Int = __LINE__) -> KIFUITestActor {
         return KIFUITestActor(inFile: file, atLine: line, delegate: self)
     }
 
-    func system(_ file : String = __FILE__, _ line : Int = __LINE__) -> KIFSystemTestActor {
+    func system(file : String = __FILE__, _ line : Int = __LINE__) -> KIFSystemTestActor {
         return KIFSystemTestActor(inFile: file, atLine: line, delegate: self)
     }
 }

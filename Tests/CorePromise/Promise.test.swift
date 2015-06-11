@@ -1,6 +1,13 @@
 import PromiseKit
 import XCTest
 
+@objc(PMKPromiseBridgeHelper) class PromiseBridgeHelper: NSObject {
+    @objc func bridge1() -> AnyPromise {
+        let p = after(0.01)
+        return AnyPromise(bound: p)
+    }
+}
+
 class TestPromise: XCTestCase {
     override func tearDown() {
         PMKUnhandledErrorHandler = { _ in }
@@ -23,7 +30,7 @@ class TestPromise: XCTestCase {
         let ex = expectationWithDescription("")
         Promise(1).then { _ -> AnyPromise in
             return AnyPromise(bound: after(0).then{ Promise<Int>(error: "") })
-        }.catch { err -> Void in
+        }.snatch { err -> Void in
             ex.fulfill()
         }
         waitForExpectationsWithTimeout(1, handler: nil)
@@ -55,7 +62,7 @@ class TestPromise: XCTestCase {
             return Promise(NSError.cancelledError())
         }.then { _ -> Void in
             XCTFail()
-        }.catch { _ -> Void in
+        }.snatch { _ -> Void in
             XCTFail()
         }
 
@@ -79,7 +86,7 @@ class TestPromise: XCTestCase {
             return Promise(err)
         }.then { _ -> Void in
             XCTFail()
-        }.catch { _ -> Void in
+        }.snatch { _ -> Void in
             XCTFail()
         }
 
@@ -91,43 +98,30 @@ class TestPromise: XCTestCase {
 
         after(0).then { _ -> Promise<Int> in
             return Promise(NSError.cancelledError())
-        }.catch(policy: .AllErrors) { _ -> Void in
+        }.snatch(policy: CatchPolicy.AllErrors) { err -> Void in
             ex.fulfill()
         }
-        
+
         waitForExpectationsWithTimeout(1, handler: nil)
     }
 
-    func testThensAreSequentialForLongTime() {
-        var values = [Int]()
-        let ex = expectationWithDescription("")
-        var promise = dispatch_promise { 0 }
-        let N = 1000
-        for x in 1..<N {
-            promise = promise.then { y -> Promise<Int> in
-                values.append(y)
-                XCTAssertEqual(x - 1, y)
-                return dispatch_promise { x }
-            }
-        }
-        promise.then { x -> Void in
-            values.append(x)
-            XCTAssertEqual(values, (0..<N).map{ $0 })
-            ex.fulfill()
-        }
-        waitForExpectationsWithTimeout(10, handler: nil)
-    }
-}
-
-
-@objc(PMKPromiseBridgeHelper) class PromiseBridgeHelper: NSObject {
-    override init() {
-        super.init()
-    }
-
-    @objc func bridge1() -> AnyPromise {
-        return AnyPromise(bound: dispatch_promise {
-            return 1
-        })
-    }
+//    func testThensAreSequentialForLongTime() {
+//        var values = [Int]()
+//        let ex = expectationWithDescription("")
+//        var promise = dispatch_promise { 0 }
+//        let N = 1000
+//        for x in 1..<N {
+//            promise = promise.then { y -> Promise<Int> in
+//                values.append(y)
+//                XCTAssertEqual(x - 1, y)
+//                return dispatch_promise { x }
+//            }
+//        }
+//        promise.then { x -> Void in
+//            values.append(x)
+//            XCTAssertEqual(values, (0..<N).map{ $0 })
+//            ex.fulfill()
+//        }
+//        waitForExpectationsWithTimeout(10, handler: nil)
+//    }
 }

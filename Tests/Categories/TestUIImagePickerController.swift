@@ -9,7 +9,7 @@ class TestPromiseImagePickerController: UIKitTestCase {
     // UIImagePickerController fulfills with edited image
     func test1() {
         class Mock: UIViewController {
-            var info = [NSObject:AnyObject]()
+            var info = [String:AnyObject]()
 
             override func presentViewController(vc: UIViewController, animated flag: Bool, completion: (() -> Void)?) {
                 let ipc = vc as! UIImagePickerController
@@ -35,7 +35,7 @@ class TestPromiseImagePickerController: UIKitTestCase {
     // UIImagePickerController fulfills with original image if no edited image available
     func test2() {
         class Mock: UIViewController {
-            var info = [NSObject:AnyObject]()
+            var info = [String:AnyObject]()
 
             override func presentViewController(vc: UIViewController, animated flag: Bool, completion: (() -> Void)?) {
                 let ipc = vc as! UIImagePickerController
@@ -69,10 +69,10 @@ class TestPromiseImagePickerController: UIKitTestCase {
                 UIControl().sendAction(button.action, to: button.target, forEvent: nil)
             }
         })
-        promise.catch { _ -> Void in
+        promise.snatch { _ -> Void in
             XCTFail()
         }
-        promise.catch(policy: CatchPolicy.AllErrors) { _ -> Void in
+        promise.snatch(policy: CatchPolicy.AllErrors) { _ -> Void in
             after(0.5).then(ex.fulfill)
         }
         waitForExpectationsWithTimeout(10, handler: nil)
@@ -85,16 +85,15 @@ class TestPromiseImagePickerController: UIKitTestCase {
         let ex = expectationWithDescription("")
         let picker = UIImagePickerController()
         let promise: Promise<UIImage> = rootvc.promiseViewController(picker, animated: false, completion: {
-            after(0.05).then { _ -> Promise<Void> in
-                let tv: UITableView = find(picker, UITableView.self)
-                tv.visibleCells()[1].tap()
-                return after(1.5)
-            }.then { _ -> Void in
-                let vcs = picker.viewControllers
-                let cv: UICollectionView = find(picker.viewControllers[1] as! UIViewController, UICollectionView.self)
-                let cell = cv.visibleCells()[0] as! UICollectionViewCell
-                cell.tap()
-            }
+//            after(0.05).then { _ -> Promise<Void> in
+//                let tv: UITableView? = find(picker, type: UITableView.self)
+//                tv?.visibleCells[1].tap()
+//                return after(1.5)
+//            }.then { _ -> Void in
+//                let cv: UICollectionView? = find(picker.viewControllers[1], type: UICollectionView.self)
+//                let cell = cv?.visibleCells()[0]
+//                cell?.tap()
+//            }
         })
         promise.then { img -> Void in
             XCTAssertTrue(img.size.width > 0)
@@ -110,16 +109,16 @@ class TestPromiseImagePickerController: UIKitTestCase {
         let ex = expectationWithDescription("")
         let picker = UIImagePickerController()
         let promise: Promise<NSData> = rootvc.promiseViewController(picker, animated: false, completion: {
-            after(0.05).then { _ -> Promise<Void> in
-                let tv: UITableView = find(picker, UITableView.self)
-                tv.visibleCells()[1].tap()
-                return after(1.5)
-            }.then { _ -> Void in
-                let vcs = picker.viewControllers
-                let cv: UICollectionView = find(vcs[1] as! UIViewController, UICollectionView.self)
-                let cell = cv.visibleCells()[0] as! UICollectionViewCell
-                cell.tap()
-            }
+//            after(0.05).then { _ -> Promise<Void> in
+//                let tv: UITableView? = find(picker, type: UITableView.self)
+//                tv?.visibleCells[1].tap()
+//                return after(1.5)
+//            }.then { _ -> Void in
+//                let vcs = picker.viewControllers
+//                let cv: UICollectionView? = find(vcs[1], type: UICollectionView.self)
+//                let cell = cv?.visibleCells()[0]
+//                cell?.tap()
+//            }
         })
         promise.then { data -> Void in
             XCTAssertTrue(data.length > 0)
